@@ -1,3 +1,5 @@
-.svg
-.gv
-.exe
+*/*         #ignore all files in each directory
+!*/*.pdf    #unignore .pdf files in each directory
+!*/*.cpp    #unignore .cpp files in each directory
+!*/*.h      #unignore .h header files in each directory
+!.gitignore #unignore .gitignore
