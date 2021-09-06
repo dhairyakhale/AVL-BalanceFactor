@@ -3,13 +3,18 @@
 
 using namespace std;
 
+//Used to create a node for AVL (self-balancing) BST
 class AVL_Node
 {
 	private:
+
 		int key;
-		int bf;
+		int bf;		//Balance factor = height(left subtree) - height(right subtree)
+					//However, we aren't allowed to calculate it.
+
 		AVL_Node *LChild, *RChild;
 
+		//Initializing AVL node with key k
 		AVL_Node(int k)
 		{
 		 	key = k;
@@ -18,6 +23,7 @@ class AVL_Node
 		 	bf = 0;
 		}
 
+		//Initializing empty AVL node
 		AVL_Node()
 		{
 		 	key = 0;
@@ -26,25 +32,32 @@ class AVL_Node
 		 	bf = 0;
 		}
 
+		//Destructor to free the node
 		~AVL_Node()
 		{
 			delete LChild;
 			delete RChild;
 		}
 
+		//Associating AVL_Tree class to this class
 	friend class AVL_Tree;
 };
 
+//Used to create tree using AVL nodes defined above
+//Also contains functions and operations on tree
 class AVL_Tree
 {
 
 	private:
-		AVL_Node* head;
+
+		AVL_Node* head;		//Pointer to dummy node. head->RChild = root of the tree
 
 	public:
+
+		//Initializing an AVL tree
 		AVL_Tree()
 		{
-			head = new AVL_Node();
+			head = new AVL_Node();	//Dummy node created
 			head->LChild = NULL;
 			head->RChild = NULL;
 		}
@@ -53,27 +66,36 @@ class AVL_Tree
 		
 		//AVL_Tree &operator=(const AVL_Tree &T);
 
+		//Resulting from L-L or R-R imbalance
 		void singleRotation(int a, AVL_Node **p, AVL_Node **r, AVL_Node **s)
 		{
-			(*p) = (*r);
+			(*p) = (*r);	//p will be the root node of the subtree resulting from rotation
 
+			//L-L imbalance, results Right rotation
 			if(a == -1)
 			{
 				(*s)->LChild = (*r)->RChild;
 				(*r)->RChild = (*s);
 			}
+
+			//R-R imbalance, results Left rotation
 			else if (a == 1)
 			{
 				(*s)->RChild = (*r)->LChild;
 				(*r)->LChild = (*s);
 			}
 
+			//Balance factors of left and right nodes after rotation is zero
 			(*r)->bf = 0;
 			(*s)->bf = 0;
 		}
 
+		//Resulting from R-L or L-R imbalance
 		void doubleRotation(int a, AVL_Node **p, AVL_Node **r, AVL_Node **s)
 		{
+			//p will be the root node of the subtree resulting from rotation
+
+			//R-L imbalance, results Right-Left rotation
 			if(a == -1)
 			{
 				(*p) = (*r)->RChild;
@@ -82,6 +104,8 @@ class AVL_Tree
 				(*s)->LChild = (*p)->RChild;
 				(*p)->RChild = (*s);
 			}
+
+			//L-R imbalance, results Left-Right rotation
 			else if (a == 1)
 			{
 				(*p) = (*r)->LChild;
@@ -91,38 +115,44 @@ class AVL_Tree
 				(*p)->LChild = (*s);
 			}
 
-			if((*p)->bf == a)
+			//Adjustment of balance factors
+
+			if((*p)->bf == a)	//If root has bf=a
 			{
-				(*s)->bf = -1*a;
+				(*s)->bf = -1*a;	//root's right child has bf opposite to it
 				(*r)->bf = 0;
 			}
-			else if((*p)->bf == 0)
+			else if((*p)->bf == 0)	//If root has bf=0
 			{
+				//Both its children will also be balanced
 				(*s)->bf = 0;
 				(*r)->bf = 0;
 			}
-			else if((*p)->bf == (-1*a))
+			else if((*p)->bf == (-1*a))		//If root has bf = -a
 			{
 				(*s)->bf = 0;
-				(*r)->bf = a;
+				(*r)->bf = a;				////root's left child has bf opposite to it
 			}
 
 			(*p)->bf = 0;
 		}
 		
+		//Inserting a new node into AVL tree with key of node as k
 		void AVL_Insert(int k)
 		{
-			AVL_Node* t = head;
-			AVL_Node* s = head->RChild;
-			AVL_Node* p = head->RChild;
+			AVL_Node* t = head;				//Parent of s
+			AVL_Node* s = head->RChild;		//Point of imbalance
+			AVL_Node* p = head->RChild;		//Node which will travel through tree, also parent of q
 
-			AVL_Node *q = NULL, *r = NULL;
+			AVL_Node *q = NULL, *r = NULL;	//q will be location of insertion, r will be relevant child of point of imbalance
 
-			AVL_Node* temp = new AVL_Node(k);
+			AVL_Node* temp = new AVL_Node(k);	//temp = new AVL node which is to be inserted
 			
-			if(p==NULL)
+			//Step 1: Insertion of node
+
+			if(p==NULL)						//If tree is empty
 			{
-				head->RChild = temp;
+				head->RChild = temp;		//New node becomes root
 				return;
 			}
 
@@ -130,11 +160,12 @@ class AVL_Tree
 			{
 				while(1)
 				{
+					//Traversal into left subtree
 					if(k < p->key)
 					{
 						q = p->LChild;
 
-						if(!q)
+						if(!q)	//If location to insert is reached
 						{
 							q = temp;
 							p->LChild = q;
@@ -143,15 +174,16 @@ class AVL_Tree
 
 						else
 						{
-							if(q->bf)
+							if(q->bf)		//If balance factor of q is non-zero, it becomes possible point of imbalance
 							{
-								t = p;
+								t = p;		
 								s = q;
 							}
 							p = q;
 						}
 					}
 
+					//Traversal into right subtree
 					else if(k > p->key)
 					{
 						q = p->RChild;
@@ -174,27 +206,35 @@ class AVL_Tree
 						}
 					}
 
+					//Element already present
 					else
 					{
+						delete temp;
 						cout<<"Element already present."<<endl;
 						return;
 					}
 				}
 
+				//Step 2: Adjustment of balance factors
+
 				int a;
 
-				if(k < s->key)
+				if(k < s->key)		//If new element inserted in LST
 					a = -1;
 				else
-					a = 1;
+					a = 1;			//If new element inserted in RST
 
+
+					//Changing bf from below the point of imbalance to inserted node
 				if(a == -1)
 					p = s->LChild;
 				else
 					p = s->RChild;
 
-				r = p;
+				r = p;	//r will be the child of s in subtree of inserted node
 
+
+					//For each p, if new element is in its LST, bf = -1. If RST, bf = 1
 				while(p != q)
 				{
 					if(k < p->key)
@@ -211,13 +251,18 @@ class AVL_Tree
 					else break;
 				}
 
+				//Step 3: Rotation
 
+					//If bf of point of imbalance was 0, it will become a
+					//This is due to new insertion into either its LST or RST
 				if(s->bf == 0)
 				{
 					s->bf = a;
 					return;
 				}
 
+					//If bf of point of imbalance was -a, it will become 0
+					//This is due to new insertion now balancing the tree
 				else if(s->bf == (-1*a))
 				{
 					s->bf = 0;
@@ -226,16 +271,21 @@ class AVL_Tree
 
 				else if(s->bf == a)
 				{
+					//L-L or R-R imbalance
 					if(r->bf == a)
 					{
 						singleRotation(a, &p, &r, &s);
 					}
 
+					//L-R or R-L imbalance
 					else if(r->bf == (-1*a))
 					{
 						doubleRotation(a, &p, &r, &s);
 					}
 				}
+
+					//Since s is removed from original location because of rotation
+					//p is in old location of s
 				if (s == t->RChild)
 					t->RChild = p;
 				else
@@ -243,33 +293,42 @@ class AVL_Tree
 			}
 		}
 
+		//Deleting node with no children (leaf)
+		//Helper function of AVL_Delete()
 		void Del0Child(AVL_Node* q, AVL_Node* par)
 		{
-			if(q->key < par->key)
+			if(q->key < par->key)		//If q is left child of parent
 				par->LChild = NULL;
 
-			else
+			else						//If q is right child of parent
 				par->RChild = NULL;
 
 			delete q;
 		}
 
+		//Deleting node with 1 child
+		//Helper function of AVL_Delete()
 		void Del1Child(AVL_Node* q, AVL_Node* par)
 		{
-			par->bf = q->bf;
+			par->bf = q->bf;			//Set parent of q
 
-			if(!q->LChild)
+			if(!q->LChild)				//If q has only right child
 			{
-				if(q->key < par->key)
+				//Connecting child of q to parent
+
+				if(q->key < par->key)			//If q is left child of parent
 					par->LChild = q->RChild;
-				else
+				else							//If q is right child of parent
 					par->RChild = q->RChild;
 
-				q->RChild = NULL;
+				q->RChild = NULL;	//Detach q
 			}
 
-			else
+			else	//If q has only right child
 			{
+				//Connecting child of q to parent
+				//Same as above
+
 				if(q->key < par->key)
 					par->LChild = q->LChild;
 				else
@@ -281,6 +340,7 @@ class AVL_Tree
 			delete q;
 		}
 
+		//Function to delete node with value k
 		void AVL_Delete(int k)
 		{
 			AVL_Node* t = head;
@@ -289,79 +349,83 @@ class AVL_Tree
 
 			AVL_Node *q = NULL, *r = NULL;
 
-			stack<AVL_Node*> parStk;
+			stack<AVL_Node*> parStk;		//Stack of parents of the element to be deleted
 			parStk.push(head);
 
+			//Locating element to be deleted
 			while(p)
 			{
-				if(k < p->key)
+				if(k < p->key)			//Traverse into left subtree
 				{
 					parStk.push(p);
 					p = p->LChild;
 				}
 
-				else if(k > p->key)
+				else if(k > p->key)		//Traverse into right subtree
 				{
 					parStk.push(p);
 					p = p->RChild;
 				}
 
-				else
+				else					//Element found
 					break;
 			}
 
-			if(!p)
+			if(!p)						//If element not found or tree is empty
 			{
 				cout<<"Element not found."<<endl;
 				return;
 			}
 
-			s = parStk.top();
+			s = parStk.top();			//s = parent of element to be deleted
 
-			if(!p->LChild && !p->RChild)
+			//Deletion of the element
+
+			if(!p->LChild && !p->RChild)	//If element to be deleted is a leaf	
 			{
 				Del0Child(p, s);
 			}
 
-			else if(!p->LChild || !p->RChild)
+			else if(!p->LChild || !p->RChild)	//If element to be deleted has only 1 child
 			{
 				Del1Child(p, s);
 			}
 
-			else
+			else	//If element to be deleted has 2 children
 			{
-				parStk.push(p);
+				parStk.push(p);					//Pushing current element
 				AVL_Node *inSucc = p->RChild;
 
-				while(inSucc->LChild)
+				while(inSucc->LChild)			//Locating inorder successor of element
 				{
-					parStk.push(inSucc);
+					parStk.push(inSucc);		//Here we will push parents of inorder successor, and not the 2-degree node
 					inSucc = inSucc->LChild;
 				}
 
-				p->key = inSucc->key;
+				p->key = inSucc->key;			//Copying inorder successor's key to the 2-degree node
 
-				k = inSucc->key;
+				k = inSucc->key;				//Saving it in k
 
-				AVL_Node* inSuccPar = parStk.top();
+				AVL_Node* inSuccPar = parStk.top();		//Inorder successor's parent
 
-				if(!inSucc->LChild && !inSucc->RChild)
+				if(!inSucc->LChild && !inSucc->RChild)	//If inorder successor is leaf
 
 					Del0Child(inSucc, inSuccPar);
 
-				else
+				else									//If inorder successor has 1 child
 					Del1Child(inSucc, inSuccPar);
 			}
 
-			int a=0;
+			int a=0;	//For assignment of bf (Like in insert)
 
-			while(parStk.top()!=head)
+			while(parStk.top()!=head)	//While all parents from stack are not removed
 			{
 				s = parStk.top();
 
 				parStk.pop();
-				t = parStk.top();
+				t = parStk.top();	//t = parent of s
 
+				//Same as AVL_Insert()
 				if(k < s->key)
 					a = -1;
 				else
@@ -374,25 +438,27 @@ class AVL_Tree
 
 				if(s->bf == 0)
 				{
-					s->bf = (-1*a);
+					s->bf = (-1*a);		//Element was deleted, hence imbalance introduced
 					return;
 				}
 
-				else if(s->bf == a)
+				else if(s->bf == a)		//key is deleted from the direction of imbalance
 				{
-					s->bf = 0;
-					continue;
+					s->bf = 0;			//Tree became more balanced
+					continue;			//Rotation still required
 				}
 
-				else if(s->bf == (-1*a))
+				else if(s->bf == (-1*a))	//key is deleted from opposite direction of imbalance
 				{
 
+					//L-L or R-R imbalance
 					if(r->bf == (-1*a))
 					{
 						singleRotation((-1*a), &p, &r, &s);
 					}
 
-					//Special case, unlike Insert
+					//Special case, unlike AVL_Insert()
+					//Still has a single rotation
 					else if(r->bf == 0)
 					{
 						p = r;
@@ -411,11 +477,13 @@ class AVL_Tree
 						r->bf = a;
 					}
 
+					//R-L or L-R imbalance
 					else if(r->bf == a)
 					{
 						doubleRotation((-1*a), &p, &r, &s);
 					}
 					
+					//If resulting tree has imbalance, parent won't be affected. Hence return.
 					if(p->bf == 1 || p->bf == -1)
 					{
 						if(s == t->RChild)
@@ -426,6 +494,7 @@ class AVL_Tree
 					}
 				}
 
+				//Same as AVL_Insert()
 				if (s == t->RChild)
 					t->RChild = p;
 				else
@@ -433,38 +502,42 @@ class AVL_Tree
 			}
 		}
 
+		//Function to search element with value k
 		bool AVL_Search(int k)
 		{
-			AVL_Node* node = head->RChild;
+			AVL_Node* node = head->RChild;	//node = root
 
 			while(node!=NULL)
 			{
-				if(k < node->key)
+				if(k < node->key)			//Traverse to LST
 					node = node->LChild;
 
-				else if (k > node->key)
+				else if (k > node->key)		//Traverse to RST
 					node = node->RChild;
 
-				else
+				else						//Element found
 					return true;
 			}
 			
-			return false;
+			return false;	//If element not found after entire traversal
 		}
 
+		//Set labels in .gv file for all nodes uniquely
+		//Helper function of AVL_Print()
 		void inorderLabel(AVL_Node* node, fstream &myfile)
 		{
+			//Exit condition
 			if(!node)
 				return;
 
-			inorderLabel(node->LChild, myfile);
-			myfile<<"    n"<<node->key<<" [label="<<node->key<<", xlabel="<<node->bf<<"];\n";
-			inorderLabel(node->RChild, myfile);
+			inorderLabel(node->LChild, myfile);	//Recursively go to left subtree
+			myfile<<"    n"<<node->key<<" [label="<<node->key<<", xlabel="<<node->bf<<"];\n";	//Assign label for node
+			inorderLabel(node->RChild, myfile);	//Recursively go to right subtree
 		}
 
 		//Used to print null nodes on diagram
 		//Called when node is NULL
-		//Helper function of printTree()
+		//Helper function of AVL_Print()
 		void printTree_null(int val, int nullc, fstream &myfile)
 		{
 		    myfile<<"    null"<<nullc<<" [shape=point];\n";
@@ -472,7 +545,7 @@ class AVL_Tree
 		}
 		
 		//Used to print the nodes and their edges
-		//Helper function of printTree()
+		//Helper function of AVL_Print()
 		void printTree_main(AVL_Node* node, fstream &myfile)
 		{
 		    static int nullc = 0;	//Used to name null nodes uniquely (null1, null2)
@@ -548,13 +621,27 @@ class AVL_Tree
 			}
 
 			string command = "dot -Tsvg graph1.gv > "+string(filename)+s+string(filename)+".svg";
-			system((const char*)command.c_str());	//Opens cmd, converts ,gv into .svg, opens it
+			system((const char*)command.c_str());	//Opens cmd, converts .gv into .svg, opens it
 		}
 
+		//Recursively deletes all nodes of tree
+		//Helper function of destructor
+		void AVL_Destroy(AVL_Node* root)
+		{
+			if(root)
+			{
+				//Recursively go to every element and delete
+				AVL_Destroy(root->LChild);
+				AVL_Destroy(root->RChild);
+				delete root;
+			}
+		}
+
+		//Destructor to delete entire tree
 		~AVL_Tree()
 		{
-			head->RChild = NULL;
-			head->LChild = NULL;
+			AVL_Destroy(head->RChild);
+			delete head;	//Delete head, as the entire tree under it is deleted.
 		}
 };
 
@@ -575,7 +662,8 @@ int main()
 		{
 			case 0:
 			{
-				cout<<"Goodbye!";
+				delete t;
+				cout<<"Goodbye!"<<endl;
 				return 0;
 			}
 			case 1:
@@ -629,7 +717,7 @@ int main()
 				t->AVL_Insert(2);
 				t->AVL_Insert(3);
 
-				//t->AVL_Delete(15);
+				t->AVL_Delete(15);
 
 				t->AVL_Print("myfile");
 
