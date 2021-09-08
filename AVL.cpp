@@ -95,7 +95,7 @@ class AVL_Tree
 		{
 			//p will be the root node of the subtree resulting from rotation
 
-			//R-L imbalance, results Right-Left rotation
+			//L-R imbalance, results Left-Right rotation
 			if(a == 1)
 			{
 				(*p) = (*r)->RChild;
@@ -105,7 +105,7 @@ class AVL_Tree
 				(*p)->RChild = (*s);
 			}
 
-			//L-R imbalance, results Left-Right rotation
+			//R-L imbalance, results Right-Left rotation
 			else if (a == -1)
 			{
 				(*p) = (*r)->LChild;
@@ -119,7 +119,7 @@ class AVL_Tree
 
 			if((*p)->bf == a)	//If root has bf=a
 			{
-				(*s)->bf = -1*a;	//root's right child has bf opposite to it
+				(*s)->bf = -1*a;
 				(*r)->bf = 0;
 			}
 			else if((*p)->bf == 0)	//If root has bf=0
@@ -131,7 +131,7 @@ class AVL_Tree
 			else if((*p)->bf == (-1*a))		//If root has bf = -a
 			{
 				(*s)->bf = 0;
-				(*r)->bf = a;				////root's left child has bf opposite to it
+				(*r)->bf = a;
 			}
 
 			(*p)->bf = 0;
@@ -313,9 +313,9 @@ class AVL_Tree
 
 			if(!q->LChild)				//If q has only right child
 			{
-				par->bf = q->RChild->bf;
-
 				//Connecting child of q to parent
+
+				par->bf = q->RChild->bf;	//Copying imbalance of new child to parent
 
 				if(q->key < par->key)			//If q is left child of parent
 					par->LChild = q->RChild;
@@ -327,10 +327,10 @@ class AVL_Tree
 
 			else	//If q has only left child
 			{
-				par->bf = q->LChild->bf;
-
 				//Connecting child of q to parent
 				//Same as above
+
+				par->bf = q->LChild->bf;
 
 				if(q->key < par->key)
 					par->LChild = q->LChild;
@@ -392,6 +392,8 @@ class AVL_Tree
 			else if(!p->LChild || !p->RChild)	//If element to be deleted has only 1 child
 			{
 				Del1Child(p, s);
+				if(s->bf == 0)			//If parent is balanced post deletion, not disturbing it
+					parStk.pop();
 			}
 
 			else	//If element to be deleted has 2 children
@@ -416,7 +418,11 @@ class AVL_Tree
 					Del0Child(inSucc, inSuccPar);
 
 				else									//If inorder successor has 1 child
+				{
 					Del1Child(inSucc, inSuccPar);
+					if(s->bf == 0)						//Same as above
+						parStk.pop();
+				}
 			}
 
 			int a=0;	//For assignment of bf (Like in AVL_Insert)
@@ -657,7 +663,7 @@ int main()
 				if(t->AVL_Search(k))
 					cout<<k<<" found!"<<endl;
 				else
-					cout<<k<<"not found."<<endl;
+					cout<<k<<" not found."<<endl;
 
 				break;
 			}
@@ -676,13 +682,8 @@ int main()
 				t->AVL_Insert(30);
 				t->AVL_Insert(40);
 				t->AVL_Insert(25);
-
-				t->AVL_Insert(20);
-				t->AVL_Insert(10);
-				t->AVL_Insert(30);
 				t->AVL_Insert(9);
 				t->AVL_Insert(15);
-				t->AVL_Insert(25);
 				t->AVL_Insert(35);
 				t->AVL_Insert(2);
 				t->AVL_Insert(3);
